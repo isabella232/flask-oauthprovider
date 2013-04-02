@@ -4,6 +4,7 @@ from oauthlib.oauth1.rfc5849.signature import collect_parameters
 from oauthlib.common import add_params_to_uri, encode_params_utf8
 from oauthlib.common import generate_token, urlencode
 from flask import Response, request, redirect
+from werkzeug.exceptions import Unauthorized, BadRequest
 from functools import wraps
 from urlparse import urlparse
 
@@ -275,7 +276,7 @@ class OAuthProvider(Server):
                         body = request.form.to_dict()
                     else:
                         body = request.data.decode("utf-8")
-                    valid = self.verify_request(request.url.decode("utf-8"),
+                    verify_result = self.verify_request(request.url.decode("utf-8"),
                             http_method=request.method.decode("utf-8"),
                             body=body,
                             headers=request.headers,
@@ -283,6 +284,7 @@ class OAuthProvider(Server):
                             require_verifier=require_verifier,
                             require_realm=require_realm or bool(realm),
                             required_realm=realm)
+                    valid, oauth_request = verify_result
                     if valid:
                         request.oauth = self.collect_request_parameters(request)
 
@@ -304,11 +306,11 @@ class OAuthProvider(Server):
                         return f(*args, **kwargs)
                     else:
                         # Unauthorized requests should not diclose their cause
-                        return Response(status=401)
+                        raise Unauthorized()
 
                 except ValueError as err:
                     # Caused by missing of or badly formatted parameters
-                    return Response(err.message, status=400)
+                    raise BadRequest(err.message)
 
             return verify_request
         return decorator
