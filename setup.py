@@ -14,7 +14,7 @@ requires = ['oauthlib>=0.2.0']
 
 setup(
     name='flask-oauthprovider',
-    version='0.1.3',
+    version='0.1.3-dl1',
     description='A full featured and secure OAuth provider base',
     long_description=fread('README.rst'),
     author='Ib Lundgren',
